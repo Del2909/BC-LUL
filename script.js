@@ -1,22 +1,20 @@
 $(document).ready(function () {
 
-	// Load nem-browser library
-	var nem = require("nem-sdk").default;
+    // Load nem-browser library
+    var nem = require("nem-sdk").default;
 
     // Create an NIS endpoint object
-	var endpoint = nem.model.objects.create("endpoint")(nem.model.nodes.defaultTestnet, nem.model.nodes.defaultPort);
+    var endpoint = nem.model.objects.create("endpoint")(nem.model.nodes.defaultTestnet, nem.model.nodes.defaultPort);
 
-	// Get an empty un-prepared transfer transaction object
-	var transferTransaction = nem.model.objects.get("transferTransaction");
+    // Create an empty un-prepared transfer transaction object
+    var transferTransaction = nem.model.objects.get("transferTransaction");
 
-	// Get an empty common object to hold pass and key
-	var common = nem.model.objects.get("common");
+    // Create an empty common object to hold pass and key
+    var common = nem.model.objects.get("common");
 
-	// Set default amount in view. It is text input so we can handle dot and comma as decimal mark easily (need cleaning but provided by the library)
-	$("#amount").val("0");
+    // Get a mosaicDefinitionMetaDataPair object with preloaded xem definition
+    var mosaicDefinitionMetaDataPair = nem.model.objects.get("mosaicDefinitionMetaDataPair");
 
-<<<<<<< HEAD
-=======
 
     // Set default amount. In case of mosaic transfer the XEM amount works as a multiplier. (2 XEM will multiply by 2 the quantity of the mosaics you send)
     $("#amount").val("1");
@@ -24,96 +22,98 @@ $(document).ready(function () {
     $("#namespaceId").val("lul_enterprise");
     $("#mosaicName").val("coconut");
     $("#privateKey").val("2ed8463c4a1b899f1cad9fad145de8a1aec1300601091512c09f750ba5758e13");
+	//2ed8463c4a1b899f1cad9fad145de8a1aec1300601091512c09f750ba5758e13
     mosaicAmount = 5;
 	var hidebutt = document.getElementById("payment");
 	hidebutt.setAttribute("style","visibility:hidden");
->>>>>>> parent of 1594ae0... Disabled XEM Transaction
 	/**
      * Function to update our fee in the view
      */
-	function updateFee() {
-		// Check for amount errors
-		if(undefined === $("#amount").val() || !nem.utils.helpers.isTextAmountValid($("#amount").val())) return alert('Invalid amount !');
+    function updateFee() {
+        // Check for amount errors
+        if (undefined === $("#amount").val() || !nem.utils.helpers.isTextAmountValid($("#amount").val())) return alert('Invalid amount !');
 
-		// Set the cleaned amount into transfer transaction object
-		transferTransaction.amount = nem.utils.helpers.cleanTextAmount($("#amount").val());
+        // Set the cleaned amount into transfer transaction object
+        transferTransaction.amount = nem.utils.helpers.cleanTextAmount($("#amount").val());
 
-		// Set the message into transfer transaction object
-		transferTransaction.message = $("#message").val();
+        // Set the message into transfer transaction object
+        transferTransaction.message = $("#message").val();
 
-		// Prepare the updated transfer transaction object
-		var transactionEntity = nem.model.transactions.prepare("transferTransaction")(common, transferTransaction, nem.model.network.data.testnet.id);
+        // Prepare the updated transfer transaction object
+        var transactionEntity = nem.model.transactions.prepare("mosaicTransferTransaction")(common, transferTransaction, mosaicDefinitionMetaDataPair, nem.model.network.data.testnet.id);
+        //console.log(mosaicDefinitionMetaDataPair);
+        // Format fee returned in prepared object
 
-		// Format fee returned in prepared object
-		var feeString = nem.utils.format.nemValue(transactionEntity.fee)[0] + "." + nem.utils.format.nemValue(transactionEntity.fee)[1];
-
-		//Set fee in view
-		$("#fee").html(feeString);
-	}
+        console.log(nem.utils.format.nemValue(transactionEntity.fee) + " helllllooooooe " + transactionEntity);
+        var feeString = nem.utils.format.nemValue(transactionEntity.fee)[0] + "." + nem.utils.format.nemValue(transactionEntity.fee)[1];
+        //Set fee in view
+        //$("#fee").html(feeString);
+    }
 
 	/**
      * Build transaction from form data and send
      */
-<<<<<<< HEAD
-	function send() {
-		// Check form for errors
-		if(!$("#privateKey").val() || !$("#recipient").val()) return alert('Missing parameter !');
-		if(undefined === $("#amount").val() || !nem.utils.helpers.isTextAmountValid($("#amount").val())) return alert('Invalid amount !');
-		if (!nem.model.address.isValid(nem.model.address.clean($("#recipient").val()))) return alert('Invalid recipent address !');
 
-		// Set the private key in common object
-		common.privateKey = $("#privateKey").val();
+    function send() {
+        // Check form for errors
+        if (!transferTransaction.mosaics.length) return alert('You must attach at least one mosaic !');
+        if (!$("#privateKey").val() || !$("#recipient").val()) return alert('Missing parameter !');
 
-		// Check private key for errors
-		if (common.privateKey.length !== 64 && common.privateKey.length !== 66) return alert('Invalid private key, length must be 64 or 66 characters !');
-    	if (!nem.utils.helpers.isHexadecimal(common.privateKey)) return alert('Private key must be hexadecimal only !');
+        if (undefined === $("#amount").val() || !nem.utils.helpers.isTextAmountValid($("#amount").val())) return alert('Invalid amount !');
 
-		// Set the cleaned amount into transfer transaction object
-		transferTransaction.amount = nem.utils.helpers.cleanTextAmount($("#amount").val());
 
-		// Recipient address must be clean (no hypens: "-")
-		transferTransaction.recipient = nem.model.address.clean($("#recipient").val());
+        if (!nem.model.address.isValid(nem.model.address.clean($("#recipient").val()))) return alert('Invalid recipent address !');
 
-		// Set message
-		transferTransaction.message = $("#message").val();
+        // Set the private key in common object
+        common.privateKey = $("#privateKey").val();
 
-		// Prepare the updated transfer transaction object
-		var transactionEntity = nem.model.transactions.prepare("transferTransaction")(common, transferTransaction, nem.model.network.data.testnet.id);
+        // Check private key for errors
+        if (common.privateKey.length !== 64 && common.privateKey.length !== 66) return alert('Invalid private key, length must be 64 or 66 characters !');
+        if (!nem.utils.helpers.isHexadecimal(common.privateKey)) return alert('Private key must be hexadecimal only !');
 
-		// Serialize transfer transaction and announce
-		nem.model.transactions.send(common, transactionEntity, endpoint).then(function(res){
-			// If code >= 2, it's an error
-			if (res.code >= 2) {
-				alert(res.message);
-			} else {
-				alert(res.message);
-			}
-		}, function(err) {
-			alert(err);
-		});
-	}
+        // Set the cleaned amount into transfer transaction object
+        transferTransaction.amount = nem.utils.helpers.cleanTextAmount($("#amount").val());
 
-	// On amount change we update fee in view
-	$("#amount").on('change keyup paste', function() {
-	    updateFee();
-	});
+        // Recipient address must be clean (no hypens: "-")
+        transferTransaction.recipient = nem.model.address.clean($("#recipient").val());
 
-	// On message change we update fee in view
-	$("#message").on('change keyup paste', function() {
-	    updateFee();
-	});
+        // Set message
+        transferTransaction.message = $("#message").val();
+        // Prepare the updated transfer transaction object
+        var transactionEntity = nem.model.transactions.prepare("mosaicTransferTransaction")(common, transferTransaction, mosaicDefinitionMetaDataPair, nem.model.network.data.testnet.id);
+        console.log("GG.com", nem.utils.format.nemValue(transactionEntity.fee), nem.utils.format.nemValue(transactionEntity.data))
+        // Serialize transfer transaction and announce
 
-	// Call send function when click on send button
-	$("#send").click(function() {
-	  send();
-		alert("The hash is : 145daskfadsunffoih32ewfdskjfoi3234adsf324");
-	 });
 
-	// Initialization of fees in view
-	updateFee();
+        if (mosaicAmount == 5) {
+            transactionEntity.fee = 300000;
+        }
 
-});
-=======
+        else if (mosaicAmount == 10) {
+            transactionEntity.fee = 300000;
+        }
+        else {
+            transactionEntity.fee = 300000;
+        }
+        console.log("GG", mosaicAmount);
+
+        console.log("GG.com", nem.utils.format.nemValue(transactionEntity.fee), nem.utils.format.nemValue(transactionEntity.data))
+
+        nem.model.transactions.send(common, transactionEntity, endpoint).then(function (res) {
+            // If code >= 2, it's an error
+            if (res.code >= 2) {
+                alert(res.message);
+            } else {
+                alert(res.message);
+            }
+        }, function (err) {
+            alert(err);
+        });
+    }
+
+	/**
+     * Function to attach a mosaic to the transferTransaction object
+     */
     function attachMosaic() {
         console.log("yyy" + mosaicAmount);
         // Check for form errors
@@ -190,7 +190,9 @@ $(document).ready(function () {
 
     // Call send function when click on send button
     $("#send").click(function () {
-        send();
+        alert("NEM Transaction disabled until final version is released");
+		alert("The next page will be a simulated certificated issuance");
+		//send();
 		myFunctionButt();
     });
 
@@ -243,4 +245,3 @@ function myFunctionButt() {
 
 }
 
->>>>>>> parent of 1594ae0... Disabled XEM Transaction
